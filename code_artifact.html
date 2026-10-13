@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="ko" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>우리반 스마트 대시보드</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font & Lucide Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Pretendard', sans-serif;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 h-full flex flex-col md:flex-row overflow-hidden">
+
+    <!-- Sidebar / Mobile Navigation -->
+    <aside id="sidebar" class="bg-white border-r border-slate-200 w-full md:w-64 flex-shrink-0 flex flex-col z-20 transition-all duration-300">
+        <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-indigo-600 text-white p-2.5 rounded-xl shadow-md shadow-indigo-100 flex items-center justify-center">
+                    <i data-lucide="graduation-cap" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-slate-900 text-lg">2학년 3반</h1>
+                    <p class="text-xs text-slate-500">스마트 클래스 대시보드</p>
+                </div>
+            </div>
+            <!-- Mobile Close Button -->
+            <button onclick="toggleMobileMenu()" class="md:hidden text-slate-400 hover:text-slate-600 p-1">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+        </div>
+
+        <!-- Navigation Links -->
+        <nav class="p-4 space-y-1.5 flex-1 overflow-y-auto">
+            <button onclick="switchTab('home')" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-indigo-600 bg-indigo-50" data-target="home">
+                <i data-lucide="home" class="w-5 h-5"></i>
+                <span>홈 대시보드</span>
+            </button>
+            <button onclick="switchTab('assignments')" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-slate-600 hover:bg-slate-100" data-target="assignments">
+                <i data-lucide="file-text" class="w-5 h-5"></i>
+                <span>수행평가 일정</span>
+            </button>
+            <button onclick="switchTab('schedule')" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-slate-600 hover:bg-slate-100" data-target="schedule">
+                <i data-lucide="calendar" class="w-5 h-5"></i>
+                <span>학급 행사 일정</span>
+            </button>
+            <button onclick="switchTab('checklist')" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-slate-600 hover:bg-slate-100" data-target="checklist">
+                <i data-lucide="check-square" class="w-5 h-5"></i>
+                <span>준비물 체크리스트</span>
+            </button>
+            <button onclick="switchTab('gallery')" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-slate-600 hover:bg-slate-100" data-target="gallery">
+                <i data-lucide="image" class="w-5 h-5"></i>
+                <span>우리반 갤러리</span>
+            </button>
+        </nav>
+
+        <!-- Footer profile / info -->
+        <div class="p-4 border-t border-slate-100">
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-full bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center text-sm">
+                    쌤
+                </div>
+                <div class="overflow-hidden">
+                    <p class="text-xs font-semibold text-slate-800 truncate">담임 선생님 공지</p>
+                    <p class="text-[11px] text-slate-500 truncate">환절기 건강 관리 유의하세요!</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Wrapper -->
+    <div class="flex-1 flex flex-col h-full overflow-hidden bg-slate-50">
+        <!-- Top Header -->
+        <header class="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-6 flex-shrink-0">
+            <div class="flex items-center space-x-3">
+                <button onclick="toggleMobileMenu()" class="md:hidden text-slate-600 hover:text-slate-900 focus:outline-none">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
+                </button>
+                <h2 id="page-title" class="text-lg font-bold text-slate-800">홈 대시보드</h2>
+            </div>
+            <div class="flex items-center space-x-3">
+                <div class="hidden sm:flex items-center space-x-2 text-xs font-medium text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg">
+                    <i data-lucide="clock" class="w-4 h-4 text-indigo-600"></i>
+                    <span id="current-date-time"></span>
+                </div>
+                <button onclick="openNotificationModal()" class="relative p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+                    <i data-lucide="bell" class="w-5 h-5"></i>
+                    <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full animate-pulse"></span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Scrollable Content Container -->
+        <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+
+            <!-- ==================== TAB 1: HOME ==================== -->
+            <div id="tab-home" class="tab-content space-y-6">
+                <!-- Banner & D-Day -->
+                <div class="bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-700 rounded-2xl p-6 sm:p-8 text-white shadow-xl shadow-indigo-100 relative overflow-hidden">
+                    <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+                    <div class="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+                        <div>
+                            <span class="bg-white/20 text-white text-xs px-3 py-1 rounded-full font-semibold mb-3 inline-block">2026학년도 1학기</span>
+                            <h2 class="text-2xl sm:text-3xl font-bold tracking-tight mb-2">즐겁고 활기찬 2학년 3반 ✨</h2>
+                            <p class="text-indigo-100 text-sm max-w-xl">수행평가 일정부터 준비물, 소중한 추억의 사진까지 한곳에서 스마트하게 확인하세요!</p>
+                        </div>
+                        <div class="bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-xl flex items-center gap-4 w-full sm:w-auto">
+                            <div class="text-center px-3 border-r border-white/20">
+                                <span class="block text-xs text-indigo-200">다음 주요행사</span>
+                                <span class="text-lg font-bold">체육대회</span>
+                            </div>
+                            <div class="text-center px-2">
+                                <span class="block text-xs text-indigo-200">D-DAY</span>
+                                <span class="text-2xl font-black text-amber-300">D-5</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Summary Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Today's Notice -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                                    <i data-lucide="bell" class="w-5 h-5 text-indigo-600"></i> 오늘의 주요 알림
+                                </h3>
+                                <span class="text-xs bg-indigo-50 text-indigo-600 font-semibold px-2 py-0.5 rounded">필독</span>
+                            </div>
+                            <ul class="space-y-3 text-sm text-slate-600">
+                                <li class="flex items-start gap-2">
+                                    <span class="w-1.5 h-1.5 bg-indigo-600 rounded-full mt-2"><span></span></span>
+                                    <span>내일 수학 수행평가 범위 공지 확인 요망</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="w-1.5 h-1.5 bg-indigo-600 rounded-full mt-2"><span></span></span>
+                                    <span>현장체험학습 가정통신문 제출 마감</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <button onclick="switchTab('assignments')" class="mt-5 w-full py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl transition-colors flex items-center justify-center gap-1">
+                            <span>수행평가 일정 보기</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+
+                    <!-- Urgent Checklists -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                                    <i data-lucide="check-square" class="w-5 h-5 text-emerald-600"></i> 필수 준비물 체크
+                                </h3>
+                                <span id="home-checklist-count" class="text-xs bg-emerald-50 text-emerald-600 font-semibold px-2 py-0.5 rounded">0/3 완료</span>
+                            </div>
+                            <div id="home-checklist-preview" class="space-y-2 text-sm text-slate-600">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+                        <button onclick="switchTab('checklist')" class="mt-5 w-full py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl transition-colors flex items-center justify-center gap-1">
+                            <span>전체 준비물 보기</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+
+                    <!-- Recent Photo Preview -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                                    <i data-lucide="image" class="w-5 h-5 text-rose-500"></i> 최근 학급 앨범
+                                </h3>
+                                <span class="text-xs text-slate-400">최신 2장</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2" id="home-gallery-preview">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+                        <button onclick="switchTab('gallery')" class="mt-5 w-full py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl transition-colors flex items-center justify-center gap-1">
+                            <span>갤러리 전체보기</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Class Schedule Summary Banner -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-bold text-slate-800 flex items-center gap-2 text-base">
+                            <i data-lucide="calendar" class="w-5 h-5 text-indigo-600"></i> 이번 주 주요 학급 일정
+                        </h3>
+                        <button onclick="switchTab('schedule')" class="text-indigo-600 text-xs font-semibold hover:underline">모든 일정 보기</button>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="home-schedule-grid">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== TAB 2: ASSIGNMENTS ==================== -->
+            <div id="tab-assignments" class="tab-content hidden space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800">수행평가 일정표</h2>
+                        <p class="text-xs text-slate-500">과목별 수행평가 날짜와 제출 방식을 미리 확인하고 준비하세요.</p>
+                    </div>
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <select id="assignment-filter" onchange="renderAssignments()" class="bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl px-3 py-2 outline-none focus:border-indigo-500">
+                            <option value="all">전체 과목</option>
+                            <option value="국어">국어</option>
+                            <option value="수학">수학</option>
+                            <option value="영어">영어</option>
+                            <option value="과학">과학</option>
+                            <option value="사회">사회</option>
+                        </select>
+                        <button onclick="openAddAssignmentModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2 rounded-xl transition-all shadow-sm flex items-center gap-1.5 whitespace-nowrap">
+                            <i data-lucide="plus" class="w-4 h-4"></i> 일정 등록
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="assignments-container">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+
+            <!-- ==================== TAB 3: SCHEDULE ==================== -->
+            <div id="tab-schedule" class="tab-content hidden space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800">학급 행사 및 달력</h2>
+                        <p class="text-xs text-slate-500">체험학습, 축제, 시험 등 월별 학급 주요 일정을 확인하세요.</p>
+                    </div>
+                    <button onclick="openAddScheduleModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2 rounded-xl transition-all shadow-sm flex items-center gap-1.5">
+                        <i data-lucide="plus" class="w-4 h-4"></i> 행사 추가
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Calendar View Simulation / Left -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm lg:col-span-1">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-bold text-slate-800 text-sm">2026년 5월</h3>
+                            <div class="flex gap-1">
+                                <button class="p-1 text-slate-400 hover:text-slate-600 rounded"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+                                <button class="p-1 text-slate-400 hover:text-slate-600 rounded"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-7 gap-1 text-center text-xs font-semibold text-slate-400 mb-2">
+                            <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
+                        </div>
+                        <div class="grid grid-cols-7 gap-1 text-center text-xs" id="calendar-days">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Schedule Timeline List / Right -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm lg:col-span-2 flex flex-col">
+                        <h3 class="font-bold text-slate-800 text-sm mb-4">이달의 행사 상세 목록</h3>
+                        <div class="space-y-3 flex-1 overflow-y-auto" id="schedule-list-container">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== TAB 4: CHECKLIST ==================== -->
+            <div id="tab-checklist" class="tab-content hidden space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800">준비물 및 개인 체크리스트</h2>
+                        <p class="text-xs text-slate-500">내일 가져와야 할 준비물을 체크하고 빠뜨린 물건이 없는지 확인하세요.</p>
+                    </div>
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <input type="text" id="new-checklist-input" placeholder="새로운 준비물 입력..." class="bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl px-3 py-2 outline-none focus:border-indigo-500 flex-1 sm:w-48">
+                        <button onclick="addChecklistItem()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2 rounded-xl transition-all shadow-sm whitespace-nowrap">
+                            추가
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-xs font-semibold text-slate-500" id="checklist-progress-text">완료율: 0%</span>
+                        <button onclick="resetChecklist()" class="text-xs text-rose-500 hover:underline">전체 초기화</button>
+                    </div>
+                    <div class="space-y-3" id="checklist-items-container">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== TAB 5: GALLERY ==================== -->
+            <div id="tab-gallery" class="tab-content hidden space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800">우리반 갤러리</h2>
+                        <p class="text-xs text-slate-500">체육대회, 현장체험학습, 즐거운 교실 일상을 사진으로 남겨보세요.</p>
+                    </div>
+                    <button onclick="openAddPhotoModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2 rounded-xl transition-all shadow-sm flex items-center gap-1.5">
+                        <i data-lucide="upload" class="w-4 h-4"></i> 사진 업로드
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="gallery-container">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- ==================== MODALS ==================== -->
+
+    <!-- Add Assignment Modal -->
+    <div id="modal-assignment" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100 space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="font-bold text-slate-800 text-base">새 수행평가 일정 등록</h3>
+                <button onclick="closeModal('assignment')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-600 mb-1">과목</label>
+                    <select id="modal-asg-subject" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:border-indigo-500">
+                        <option value="국어">국어</option>
+                        <option value="수학">수학</option>
+                        <option value="영어">영어</option>
+                        <option value="과학">과학</option>
+                        <option value="사회">사회</option>
+                        <option value="예체능">예체능</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-600 mb-1">평가 제목</label>
+                    <input type="text" id="modal-asg-title" placeholder="예: 소설 감상문 제출" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-600 mb-1">마감일</label>
+                    <input type="date" id="modal-asg-date" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-600 mb-1">상세 내용 및 루브릭 안내</label>
+                    <textarea id="modal-asg-desc" rows="3" placeholder="평가 기준이나 제출 방법 입력..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:border-indigo-500"></textarea>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeModal('assignment')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold rounded-xl">취소</button>
+                <button onclick="saveAssignment()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl">등록하기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Schedule Modal -->
+    <div id="modal-schedule" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100 space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="font-bold text-slate-800 text-base">학급 행사 일정 등록</h3>
+                <button onclick="closeModal('schedule')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-600 mb-1">행사명</label>
+                    <input type="text" id="modal-sch-title" placeholder="예: 체육대회 연습" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-600 mb-1">날짜 및 시간</label>
+                    <input type="text" id="modal-sch-date" placeholder="예: 5월 15일 (금) 09:00" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-600 mb-1">장소 / 비고</label>
+                    <input type="text" id="modal-sch-location" placeholder="예: 학교 운동장" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:border-indigo-500">
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeModal('schedule')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold rounded-xl">취소</button>
+                <button onclick="saveSchedule()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl">등록하기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Photo Modal -->
+    <div id="modal-photo" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100 space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="font-bold text-slate-800 text-base">갤러리 사진 올리기</h3>
+                <button onclick="closeModal('photo')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-600 mb-1">사진 설명 / 제목</label>
+                    <input type="text" id="modal-photo-title" placeholder="예: 즐거운 체육대회 단체 사진" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-600 mb-1">카테고리</label>
+                    <select id="modal-photo-tag" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:border-indigo-500">
+                        <option value="체육대회">체육대회</option>
+                        <option value="현장체험학습">현장체험학습</option>
+                        <option value="교실일상">교실일상</option>
+                        <option value="방과후">방과후</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-600 mb-1">사진 선택 (샘플 이미지 자동 지정 또는 URL)</label>
+                    <select id="modal-photo-url" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:border-indigo-500">
+                        <option value="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=600&q=80">학생들 그룹 활동 사진</option>
+                        <option value="https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=600&q=80">교실 풍경 사진</option>
+                        <option value="https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=600&q=80">야외 활동 / 체육 사진</option>
+                        <option value="https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?auto=format&fit=crop&w=600&q=80">도서관 및 독서 사진</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeModal('photo')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold rounded-xl">취소</button>
+                <button onclick="savePhoto()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl">업로드</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Modal -->
+    <div id="modal-notification" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl border border-slate-100 space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="font-bold text-slate-800 text-base">알림 센터</h3>
+                <button onclick="closeModal('notification')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="space-y-3 text-xs text-slate-600">
+                <div class="p-3 bg-indigo-50 rounded-xl border border-indigo-100">
+                    <p class="font-semibold text-indigo-900 mb-1">수행평가 D-3 알림</p>
+                    <p>영어 듣기평가 및 발표 수행평가가 다가옵니다. 미리 준비하세요!</p>
+                </div>
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <p class="font-semibold text-slate-800 mb-1">학급 사진 업로드 완료</p>
+                    <p>지난주 현장체험학습 사진이 갤러리에 추가되었습니다.</p>
+                </div>
+            </div>
+            <button onclick="closeModal('notification')" class="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl">확인</button>
+        </div>
+    </div>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // Default Data Models with LocalStorage Support
+        const defaultAssignments = [
+            { id: 1, subject: '국어', title: '토론문 작성 및 발표', date: '2026-05-20', desc: '모둠별 사회적 이슈 토론 개요서 및 발표 평가' },
+            { id: 2, subject: '수학', title: '함수의 활용 탐구 보고서', date: '2026-05-24', desc: '생활 속 수학 함수 사례 조사 및 레포트 제출' },
+            { id: 3, subject: '영어', title: '영어 에세이 쓰기', date: '2026-05-28', desc: '나의 진로와 꿈에 대한 300단어 이상 에세이' },
+            { id: 4, subject: '과학', title: '화학 반응 실험 보고서', date: '2026-06-02', desc: '금속의 반응성 실험 후 개인별 관찰 일지 작성' }
+        ];
+
+        const defaultSchedule = [
+            { id: 1, title: '체육대회 리허설', date: '5월 13일 (수)', location: '운동장' },
+            { id: 2, title: '학년 체육대회 본선', date: '5월 18일 (월)', location: '학교 대운동장' },
+            { id: 3, title: '학부모 공개수업', date: '5월 22일 (금)', location: '각 반 교실' },
+            { id: 4, title: '현장체험학습', date: '5월 29일 (금)', location: '서울 과학관 및 국립박물관' }
+        ];
+
+        const defaultChecklist = [
+            { id: 1, text: '수학교과서 및 워크북 지참', completed: true },
+            { id: 2, text: '체육복 및 운동화 챙기기', completed: false },
+            { id: 3, text: '가정통신문 회신서 제출', completed: true },
+            { id: 4, text: '과학 실험용 개인 보안경', completed: false }
+        ];
+
+        const defaultGallery = [
+            { id: 1, title: '체육대회 단체 축구 응원', tag: '체육대회', url: 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=600&q=80' },
+            { id: 2, title: '미술 시간 모둠 협동 작품', tag: '교실일상', url: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=600&q=80' },
+            { id: 3, title: '과학실 실험 수업 풍경', tag: '교실일상', url: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=600&q=80' }
+        ];
+
+        // State variables
+        let assignments = JSON.parse(localStorage.getItem('class_assignments')) || defaultAssignments;
+        let schedule = JSON.parse(localStorage.getItem('class_schedule')) || defaultSchedule;
+        let checklist = JSON.parse(localStorage.getItem('class_checklist')) || defaultChecklist;
+        let gallery = JSON.parse(localStorage.getItem('class_gallery')) || defaultGallery;
+
+        // Save to LocalStorage
+        function saveData() {
+            localStorage.setItem('class_assignments', JSON.stringify(assignments));
+            localStorage.setItem('class_schedule', JSON.stringify(schedule));
+            localStorage.setItem('class_checklist', JSON.stringify(checklist));
+            localStorage.setItem('class_gallery', JSON.stringify(gallery));
+        }
+
+        // Initialize Lucide icons & date time on load
+        window.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            updateDateTime();
+            setInterval(updateDateTime, 60000);
+            renderAll();
+        });
+
+        function updateDateTime() {
+            const now = new Date();
+            const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit' };
+            document.getElementById('current-date-time').textContent = now.toLocaleDateString('ko-KR', options);
+        }
+
+        // Tab Navigation Switcher
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('text-indigo-600', 'bg-indigo-50');
+                btn.classList.add('text-slate-600', 'hover:bg-slate-100');
+                if(btn.getAttribute('data-target') === tabId) {
+                    btn.classList.add('text-indigo-600', 'bg-indigo-50');
+                    btn.classList.remove('text-slate-600', 'hover:bg-slate-100');
+                }
+            });
+
+            const titles = {
+                'home': '홈 대시보드',
+                'assignments': '수행평가 일정',
+                'schedule': '학급 행사 일정',
+                'checklist': '준비물 체크리스트',
+                'gallery': '우리반 갤러리'
+            };
+            document.getElementById('page-title').textContent = titles[tabId];
+
+            // Close mobile menu if open
+            if(window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.add('-translate-x-full');
+            }
+        }
+
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('hidden');
+        }
+
+        function renderAll() {
+            renderHome();
+            renderAssignments();
+            renderSchedule();
+            renderChecklist();
+            renderGallery();
+            lucide.createIcons();
+        }
+
+        // Render Home Dash Summary
+        function renderHome() {
+            // Checklist Preview (First 3)
+            const chkContainer = document.getElementById('home-checklist-preview');
+            chkContainer.innerHTML = '';
+            const completedCount = checklist.filter(i => i.completed).length;
+            document.getElementById('home-checklist-count').textContent = `${completedCount}/${checklist.length} 완료`;
+
+            checklist.slice(0, 3).forEach(item => {
+                chkContainer.innerHTML += `
+                    <div class="flex items-center space-x-2 text-xs">
+                        <input type="checkbox" ${item.completed ? 'checked' : ''} disabled class="rounded text-indigo-600">
+                        <span class="${item.completed ? 'line-through text-slate-400' : 'text-slate-700'} truncate">${item.text}</span>
+                    </div>
+                `;
+            });
+
+            // Gallery Preview (First 2)
+            const galContainer = document.getElementById('home-gallery-preview');
+            galContainer.innerHTML = '';
+            gallery.slice(0, 2).forEach(photo => {
+                galContainer.innerHTML += `
+                    <div class="relative rounded-xl overflow-hidden aspect-video bg-slate-100">
+                        <img src="${photo.url}" alt="${photo.title}" class="w-full h-full object-cover">
+                    </div>
+                `;
+            });
+
+            // Schedule Preview (First 4)
+            const schContainer = document.getElementById('home-schedule-grid');
+            schContainer.innerHTML = '';
+            schedule.slice(0, 4).forEach(sch => {
+                schContainer.innerHTML += `
+                    <div class="p-4 bg-slate-50 border border-slate-100 rounded-xl">
+                        <span class="text-[11px] font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">${sch.date}</span>
+                        <h4 class="font-bold text-slate-800 text-sm mt-2">${sch.title}</h4>
+                        <p class="text-xs text-slate-500 mt-1 flex items-center gap-1"><i data-lucide="map-pin" class="w-3 h-3"></i> ${sch.location}</p>
+                    </div>
+                `;
+            });
+        }
+
+        // Render Assignments
+        function renderAssignments() {
+            const filter = document.getElementById('assignment-filter')?.value || 'all';
+            const container = document.getElementById('assignments-container');
+            container.innerHTML = '';
+
+            const filtered = filter === 'all' ? assignments : assignments.filter(a => a.subject === filter);
+
+            if(filtered.length === 0) {
+                container.innerHTML = `<div class="col-span-full py-12 text-center text-slate-400 text-xs">등록된 수행평가 일정이 없습니다.</div>`;
+                return;
+            }
+
+            filtered.forEach(asg => {
+                container.innerHTML += `
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-xs font-bold px-2.5 py-1 bg-indigo-50 text-indigo-600 rounded-lg">${asg.subject}</span>
+                                <span class="text-xs font-semibold text-rose-500 bg-rose-50 px-2 py-0.5 rounded-lg">마감: ${asg.date}</span>
+                            </div>
+                            <h3 class="font-bold text-slate-800 text-base mb-2">${asg.title}</h3>
+                            <p class="text-xs text-slate-600 leading-relaxed">${asg.desc}</p>
+                        </div>
+                        <div class="mt-5 pt-3 border-t border-slate-100 flex justify-between items-center">
+                            <span class="text-[11px] text-slate-400">제출 방식: 온라인/실물</span>
+                            <button onclick="deleteAssignment(${asg.id})" class="text-slate-400 hover:text-rose-500 text-xs flex items-center gap-1">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> 삭제
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            lucide.createIcons();
+        }
+
+        // Render Schedule & Calendar
+        function renderSchedule() {
+            const container = document.getElementById('schedule-list-container');
+            container.innerHTML = '';
+
+            schedule.forEach(sch => {
+                container.innerHTML += `
+                    <div class="p-4 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-xs">
+                                📅
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-800 text-sm">${sch.title}</h4>
+                                <p class="text-xs text-slate-500">${sch.date} · ${sch.location}</p>
+                            </div>
+                        </div>
+                        <button onclick="deleteSchedule(${sch.id})" class="text-slate-400 hover:text-rose-500 p-1">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                `;
+            });
+
+            // Mini Calendar Days simulation
+            const calDays = document.getElementById('calendar-days');
+            calDays.innerHTML = '';
+            for(let i=1; i<=31; i++) {
+                const isEvent = [13, 18, 22, 29].includes(i);
+                calDays.innerHTML += `
+                    <div class="aspect-square flex flex-col items-center justify-center rounded-lg text-xs ${isEvent ? 'bg-indigo-600 text-white font-bold shadow-sm' : 'hover:bg-slate-100 text-slate-700'}">
+                        <span>${i}</span>
+                        ${isEvent ? '<span class="w-1 h-1 bg-amber-300 rounded-full mt-0.5"></span>' : ''}
+                    </div>
+                `;
+            }
+            lucide.createIcons();
+        }
+
+        // Render Checklist
+        function renderChecklist() {
+            const container = document.getElementById('checklist-items-container');
+            container.innerHTML = '';
+
+            const completedCount = checklist.filter(i => i.completed).length;
+            const percent = checklist.length > 0 ? Math.round((completedCount / checklist.length) * 100) : 0;
+            document.getElementById('checklist-progress-text').textContent = `완료율: ${percent}% (${completedCount}/${checklist.length})`;
+
+            checklist.forEach(item => {
+                container.innerHTML += `
+                    <div class="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                        <label class="flex items-center space-x-3 cursor-pointer flex-1">
+                            <input type="checkbox" ${item.completed ? 'checked' : ''} onchange="toggleChecklistItem(${item.id})" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
+                            <span class="text-xs font-medium ${item.completed ? 'line-through text-slate-400' : 'text-slate-700'}">${item.text}</span>
+                        </label>
+                        <button onclick="deleteChecklistItem(${item.id})" class="text-slate-400 hover:text-rose-500 p-1">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                `;
+            });
+            lucide.createIcons();
+        }
+
+        // Render Gallery
+        function renderGallery() {
+            const container = document.getElementById('gallery-container');
+            container.innerHTML = '';
+
+            gallery.forEach(photo => {
+                container.innerHTML += `
+                    <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm flex flex-col">
+                        <div class="relative aspect-video bg-slate-100 overflow-hidden">
+                            <img src="${photo.url}" alt="${photo.title}" class="w-full h-full object-cover hover:scale-105 transition-transform duration-300">
+                            <span class="absolute top-3 left-3 bg-slate-900/60 backdrop-blur-md text-white text-[11px] px-2.5 py-1 rounded-lg font-medium">${photo.tag}</span>
+                        </div>
+                        <div class="p-4 flex justify-between items-center">
+                            <h4 class="font-bold text-slate-800 text-sm truncate">${photo.title}</h4>
+                            <button onclick="deletePhoto(${photo.id})" class="text-slate-400 hover:text-rose-500 p-1">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            lucide.createIcons();
+        }
+
+        // Modal controllers
+        function openAddAssignmentModal() { document.getElementById('modal-assignment').classList.remove('hidden'); }
+        function openAddScheduleModal() { document.getElementById('modal-schedule').classList.remove('hidden'); }
+        function openAddPhotoModal() { document.getElementById('modal-photo').classList.remove('hidden'); }
+        function openNotificationModal() { document.getElementById('modal-notification').classList.remove('hidden'); }
+
+        function closeModal(type) {
+            document.getElementById(`modal-${type}`).classList.add('hidden');
+        }
+
+        // Add / Delete Actions
+        function saveAssignment() {
+            const subject = document.getElementById('modal-asg-subject').value;
+            const title = document.getElementById('modal-asg-title').value;
+            const date = document.getElementById('modal-asg-date').value;
+            const desc = document.getElementById('modal-asg-desc').value;
+
+            if(!title || !date) {
+                alert('제목과 날짜를 입력해주세요.');
+                return;
+            }
+
+            assignments.push({ id: Date.now(), subject, title, date, desc });
+            saveData();
+            renderAll();
+            closeModal('assignment');
+        }
+
+        function deleteAssignment(id) {
+            assignments = assignments.filter(a => a.id !== id);
+            saveData();
+            renderAll();
+        }
+
+        function saveSchedule() {
+            const title = document.getElementById('modal-sch-title').value;
+            const date = document.getElementById('modal-sch-date').value;
+            const location = document.getElementById('modal-sch-location').value;
+
+            if(!title || !date) {
+                alert('행사명과 날짜를 입력해주세요.');
+                return;
+            }
+
+            schedule.push({ id: Date.now(), title, date, location });
+            saveData();
+            renderAll();
+            closeModal('schedule');
+        }
+
+        function deleteSchedule(id) {
+            schedule = schedule.filter(s => s.id !== id);
+            saveData();
+            renderAll();
+        }
+
+        function addChecklistItem() {
+            const input = document.getElementById('new-checklist-input');
+            const text = input.value.trim();
+            if(!text) return;
+
+            checklist.push({ id: Date.now(), text, completed: false });
+            input.value = '';
+            saveData();
+            renderAll();
+        }
+
+        function toggleChecklistItem(id) {
+            const item = checklist.find(i => i.id === id);
+            if(item) {
+                item.completed = !item.completed;
+                saveData();
+                renderAll();
+            }
+        }
+
+        function deleteChecklistItem(id) {
+            checklist = checklist.filter(i => i.id !== id);
+            saveData();
+            renderAll();
+        }
+
+        function resetChecklist() {
+            checklist.forEach(i => i.completed = false);
+            saveData();
+            renderAll();
+        }
+
+        function savePhoto() {
+            const title = document.getElementById('modal-photo-title').value || '우리반 추억 사진';
+            const tag = document.getElementById('modal-photo-tag').value;
+            const url = document.getElementById('modal-photo-url').value;
+
+            gallery.push({ id: Date.now(), title, tag, url });
+            saveData();
+            renderAll();
+            closeModal('photo');
+        }
+
+        function deletePhoto(id) {
+            gallery = gallery.filter(p => p.id !== id);
+            saveData();
+            renderAll();
+        }
+    </script>
+</body>
+</html>
